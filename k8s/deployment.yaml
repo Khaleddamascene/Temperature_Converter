@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temperature-converter
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: temperature-converter
+  template:
+    metadata:
+      labels:
+        app: temperature-converter
+    spec:
+      containers:
+        - name: temperature-converter
+          image: khaledmarai/temperature_converter:latest
+          # Use the locally loaded image, including the latest fixes.
+          imagePullPolicy: IfNotPresent
+          env:
+            # Replace with a reachable Windows IPv4 address if necessary.
+            - name: DISPLAY
+              value: "host.minikube.internal:0.0"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "512Mi"
