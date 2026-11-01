@@ -140,21 +140,43 @@ docker run --rm -e DISPLAY=host.docker.internal:0.0 khaledmarai/temperature_conv
 
 ## Kubernetes test
 
-Set the image in `k8s/deployment.yaml` to `khaledmarai/temperature_converter:latest`. Set DISPLAY to an X-server address reachable from the cluster's pods; the Docker Desktop hostname is not universal across clusters.
+The deployment in `k8s/deployment.yaml` runs one instance of `khaledmarai/temperature_converter:latest`. Its `DISPLAY` defaults to `host.minikube.internal:0.0` (display 0, TCP port 6000). This is minikube's host-access name; its address depends on the driver. See the [minikube host-access documentation](https://minikube.sigs.k8s.io/docs/handbook/host-access/).
+
+For a new Docker-based minikube profile, start Docker Desktop in Linux-container mode, then start the cluster:
 
 ```powershell
-kubectl apply -f k8s/deployment.yaml
-kubectl rollout status deployment/temperature-converter --timeout=120s
-kubectl get pods
-kubectl logs deployment/temperature-converter
+minikube start --driver=docker
+```
+
+If your existing `minikube` profile uses Hyper-V, use `minikube start` to keep its configured driver instead. Run it from a PowerShell session with permission to manage Hyper-V. Do not change an existing profile's driver using the command above.
+
+Start XMing or VcXsrv on Windows with display 0 and TCP listening enabled. It must listen on an interface reachable from minikube, not only localhost. Allow the cluster's source address through the X server access controls and Windows firewall on TCP port 6000.
+
+Check connectivity from the minikube node before deploying:
+
+```powershell
+minikube ssh -- "nc -vz host.minikube.internal 6000"
+```
+
+If that address does not reach the Windows X server, run `ipconfig` and use a Windows IPv4 address reachable from minikube. Test it with `minikube ssh -- "nc -vz <WINDOWS-IP> 6000"`, replacing `<WINDOWS-IP>` with the actual address. Set the YAML's `DISPLAY` value to that address followed by `:0.0`. Do not use `localhost` or the output of `minikube ip`: those refer to the pod or cluster node, not the Windows X server.
+
+Deploy explicitly to the minikube context:
+
+```powershell
+kubectl --context=minikube apply -f k8s/deployment.yaml
+kubectl --context=minikube rollout status deployment/temperature-converter --timeout=120s
+kubectl --context=minikube get pods -l app=temperature-converter
+kubectl --context=minikube logs deployment/temperature-converter
 ```
 
 Verify the GUI appears through the X server and test conversion and languages. A running Pod alone does not establish that the GUI works.
 
+If the logs report `Unable to open DISPLAY`, check the address, TCP connectivity, and X server authorization. Node connectivity does not guarantee that the hostname resolves inside the pod; if necessary, use the tested Windows IPv4 address in the YAML and apply it again. No Kubernetes Service or port forwarding is needed: the application connects outward to the X server. Closing the GUI exits the application, so Kubernetes will restart it; delete the deployment when finished.
+
 Cleanup:
 
 ```powershell
-kubectl delete deployment temperature-converter
+kubectl --context=minikube delete -f k8s/deployment.yaml
 ```
 
 ## Submission
