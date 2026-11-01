@@ -1,87 +1,162 @@
-# JavaFX Temperature Converter
+# Temperature Converter
 
-Java 21 / Maven temperature converter with FXML, five UTF-8 ResourceBundles, JUnit, JaCoCo, Jenkins, Docker and Kubernetes configuration.
+A JavaFX application for converting temperatures between Celsius and Fahrenheit, with English, Finnish, Swedish, Japanese and Arabic interfaces.
+
+## Links
+
+- [GitHub repository](https://github.com/Khaleddamascene/Temperature_Converter)
+- [Docker Hub image](https://hub.docker.com/r/khaledmarai/temperature_converter)
+- Image name: `khaledmarai/temperature_converter:latest`
+
+## Features
+
+- Fahrenheit to Celsius and Celsius to Fahrenheit conversion.
+- Dynamic language switching using FXML and UTF-8 ResourceBundles.
+- Right-to-left layout for Arabic.
+- Decimal point, decimal comma and Arabic numeric input support.
+- Invalid-number validation and extreme-temperature warnings.
+- JUnit tests, JaCoCo coverage, Jenkins pipeline and Docker configuration.
 
 ## Run locally
 
-Install JDK 21 and Maven 3.9+, then run from this directory:
+Install JDK 21 and Maven 3.9 or later.
 
-```sh
+```powershell
+git clone https://github.com/Khaleddamascene/Temperature_Converter.git
+cd Temperature_Converter
 mvn clean verify
 mvn javafx:run
 ```
 
-Choose English, Finnish, Swedish, Japanese or Arabic, select the conversion direction, enter a temperature, and click Convert. Arabic uses right-to-left layout. Decimal points, decimal commas and Arabic digits/separators are supported; grouping separators are not supported. Non-finite inputs and conversion overflow are rejected. Values below -40 Celsius or above 50 Celsius trigger a warning.
+## Run with Docker on Windows
 
-Language switching preserves input and conversion direction, and clears previous results. Keep all five UTF-8 property files separate; the base bundle is English.
+Start Docker Desktop in Linux-container mode. Start XMing or VcXsrv on display 0 with TCP enabled. Authorize the Docker/WSL source address in the X server and permit its connection through the Windows firewall on TCP port 6000.
 
-## Code
+Pull and run the image:
 
-- LocalizationApp.java: JavaFX startup.
-- MainController.java: conversion actions, language switching and number formatting.
-- TemperatureConverter.java: both conversions and extreme-temperature detection.
-- NumberParser.java: input normalization and validation.
-- src/main/resources/org/example/main.fxml: interface with ResourceBundle references.
-- MessagesBundle*.properties: five languages.
+```powershell
+docker pull khaledmarai/temperature_converter:latest
+docker run --rm --name temperature-converter -e DISPLAY=host.docker.internal:0.0 khaledmarai/temperature_converter:latest
+```
 
-## Tests
+Run each command on one line in PowerShell. Keep the X server running while using the application.
 
-The verify command runs tests and enforces at least 90% line coverage individually for TemperatureConverter and NumberParser. Open target/site/jacoco/index.html for coverage.
+### Why DISPLAY is required
 
-On a machine with a graphical display, also run:
+The application runs inside a Linux container, while XMing or VcXsrv displays its window on Windows.
 
-```sh
+- `-e` sets an environment variable inside the container.
+- `DISPLAY` specifies the graphical display address.
+- `host.docker.internal` points to the Windows host from Docker Desktop.
+- `:0.0` selects X display 0, screen 0.
+
+## Build and publish
+
+Run from the project directory containing Dockerfile, pom.xml and src:
+
+```powershell
+docker build -t khaledmarai/temperature_converter:latest .
+```
+
+The multistage Dockerfile compiles the application and downloads Linux JavaFX dependencies inside its Maven build stage.
+
+To publish, authenticate with an account authorized to push to this repository. Use a Docker Hub access token when prompted for a password:
+
+```powershell
+docker login -u khaledmarai
+docker push khaledmarai/temperature_converter:latest
+```
+
+Rebuild after changing source code, FXML, translations or the Dockerfile, then start a new container. Push the updated image if other machines need it.
+
+## Tests and coverage
+
+```powershell
+mvn clean verify
+```
+
+Open `target/site/jacoco/index.html` to inspect coverage.
+
+To include the optional GUI tests on a machine with a working graphical display:
+
+```powershell
 mvn -DguiTests=true clean verify
 ```
 
-This runs the optional FXML/controller smoke test, checking languages, Arabic orientation and conversion. Visual rendering and X-server display still require manual checks.
+GUI tests are disabled by default. Therefore, MainController may show 0% coverage in a standard run. A Jenkins service may require additional display setup to execute GUI tests.
 
-## Docker and Windows X server
+## Jenkins configuration
 
-Start Docker Desktop in Linux-container mode. Start XMing or VcXsrv on display 0 with TCP enabled. Authorize the Docker/WSL source address in the X server and permit its connection to TCP port 6000 through your private-network firewall. Avoid globally disabling access control.
+The Windows pipeline requires:
 
-```sh
-docker build -t YOUR_DOCKERHUB_USERNAME/temperature-converter:1.0 .
-docker run --rm --name temperature-converter -e DISPLAY=host.docker.internal:0.0 YOUR_DOCKERHUB_USERNAME/temperature-converter:1.0
+- JDK 21 and a Maven tool installation named `Maven3`.
+- A Windows agent for stages using `bat`.
+- Docker CLI and Docker daemon access for the account running the agent.
+- Docker Pipeline and JUnit plugins.
+- Username/password credential ID `Temperature_Converter_ID`, with the Docker Hub username and access token.
+- `DOCKERHUB_REPO = 'khaledmarai/temperature_converter'`.
+- `DOCKER_IMAGE_TAG = 'latest'`.
+
+Use `mvn -B clean verify` to build, test and generate/check coverage. Publish JUnit results from `target/surefire-reports/*.xml` and archive `target/site/jacoco/**`. A pipeline using `jacoco()` also requires a compatible coverage publishing plugin.
+
+Commit changes to GitHub before triggering Jenkins so its checkout receives the current source and Dockerfile. Build and push stages publish the image using the configured credentials.
+
+The original bundled Jenkinsfile is a separate Linux-agent variant using the `docker` agent label, `dockerhub-credentials` credential and `DOCKERHUB_REPOSITORY` parameter. If using that variant, configure those names and set the parameter to `khaledmarai/temperature_converter`.
+
+## Troubleshooting
+
+### Unable to open DISPLAY
+
+Use the complete run command with `-e DISPLAY=host.docker.internal:0.0`. Ensure the X server is running and permits connections from Docker/WSL.
+
+```powershell
+Test-NetConnection localhost -Port 6000
 ```
 
-The image builds Linux JavaFX dependencies and includes Japanese and Arabic fonts. If no window appears, inspect docker logs temperature-converter, the DISPLAY address, X-server access and firewall settings. Cookie-authenticated X servers also require a read-only mount of an authorized Xauthority file and XAUTHORITY set to its container path, readable by the app user.
+A successful result confirms Windows can reach that port; it does not prove Docker is authorized. Check X-server listening settings, access controls and firewall rules if the container still cannot connect.
 
-Publish after verifying the image:
+### Japanese text appears as squares
 
-```sh
-docker login
-docker push YOUR_DOCKERHUB_USERNAME/temperature-converter:1.0
+Install `fontconfig`, `fonts-noto-core` and `fonts-noto-cjk` in the runtime image and run `fc-cache -f` after installation.
+
+Check Japanese fonts inside the image:
+
+```powershell
+docker run --rm --entrypoint fc-list khaledmarai/temperature_converter:latest :lang=ja family
 ```
 
-## Jenkins
+If Noto Sans CJK JP is installed but not selected, add its family to the root VBox style in main.fxml:
 
-1. Push this project to your GitHub repository.
-2. Configure a trusted Linux Jenkins agent labelled docker with Docker daemon access.
-3. Install Pipeline, Git, Docker Pipeline, Credentials Binding and JUnit plugins.
-4. Add a username/password credential with ID dockerhub-credentials: your Docker Hub username and access token.
-5. Create a Pipeline from SCM job pointing to your repository and Jenkinsfile on your trusted submission branch.
-6. Set DOCKERHUB_REPOSITORY to yourusername/temperature-converter and run it.
+```xml
+style="-fx-font-size: 15px; -fx-font-family: 'Noto Sans CJK JP';"
+```
 
-After initial configuration, the pipeline polls SCM every five minutes. It runs tests and coverage checks, archives reports, builds the image and pushes the Jenkins build-number and latest tags. Credentials are not stored in the project.
+Rebuild and restart, then recheck all five languages:
 
-## Kubernetes
+```powershell
+docker build --no-cache -t khaledmarai/temperature_converter:latest .
+docker run --rm -e DISPLAY=host.docker.internal:0.0 khaledmarai/temperature_converter:latest
+```
 
-Publish your image, then edit k8s/deployment.yaml with your actual image/tag and a DISPLAY host reachable from the pods. The supplied address is a Docker Desktop starting point; other clusters may need a different address and X-server authorization.
+## Kubernetes test
 
-```sh
+Set the image in `k8s/deployment.yaml` to `khaledmarai/temperature_converter:latest`. Set DISPLAY to an X-server address reachable from the cluster's pods; the Docker Desktop hostname is not universal across clusters.
+
+```powershell
 kubectl apply -f k8s/deployment.yaml
 kubectl rollout status deployment/temperature-converter --timeout=120s
 kubectl get pods
 kubectl logs deployment/temperature-converter
 ```
 
-Verify the window appears through the X server and check conversions and all languages. A running Pod alone does not verify the GUI. No Service or persistent storage is needed. Cleanup:
+Verify the GUI appears through the X server and test conversion and languages. A running Pod alone does not establish that the GUI works.
 
-```sh
+Cleanup:
+
+```powershell
 kubectl delete deployment temperature-converter
 ```
 
 ## Submission
 
-Submit your actual GitHub link, Docker Hub image URL and real screenshots of the containerized GUI running through your X server. Check both conversion directions, invalid numbers, all five languages, Japanese/Arabic glyphs and extreme-temperature boundaries. External deployment and screenshots must be completed in your environment.
+Submit the GitHub and Docker Hub links above and real screenshots of the containerized GUI running through XMing or VcXsrv. Include Jenkins, coverage and Kubernetes evidence as required. These instructions do not themselves certify successful deployment.

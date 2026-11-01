@@ -2,14 +2,44 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
-<VBox fx:id="root" spacing="18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.MainController" style="-fx-font-size: 15px;">
-    <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
-    <Label fx:id="heading" text="%welcome" wrapText="true" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
-    <HBox spacing="12" alignment="CENTER_LEFT"><Label fx:id="languageLabel" text="%language"/><ComboBox fx:id="languages" prefWidth="200"/></HBox>
+
+<VBox fx:id="root"
+      spacing="18"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.example.MainController"
+      style="-fx-font-size: 15px; -fx-font-family: 'Noto Sans CJK JP';">
+
+    <padding>
+        <Insets top="24" right="24" bottom="24" left="24"/>
+    </padding>
+
+    <Label fx:id="heading"
+           text="%welcome"
+           wrapText="true"
+           style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <Label fx:id="languageLabel" text="%language"/>
+        <ComboBox fx:id="languages" prefWidth="200"/>
+    </HBox>
+
     <ComboBox fx:id="operation" prefWidth="500"/>
-    <Label fx:id="temperatureLabel" text="%temperature" labelFor="$temperature"/>
+
+    <Label fx:id="temperatureLabel"
+           text="%temperature"
+           labelFor="$temperature"/>
+
     <TextField fx:id="temperature" onAction="#convert"/>
-    <Button fx:id="convertButton" text="%convert" onAction="#convert"/>
-    <Label fx:id="conversionResult" wrapText="true" style="-fx-font-size: 22px;"/>
-    <Label fx:id="warning" wrapText="true" style="-fx-text-fill: #a64000;"/>
+
+    <Button fx:id="convertButton"
+            text="%convert"
+            onAction="#convert"/>
+
+    <Label fx:id="conversionResult"
+           wrapText="true"
+           style="-fx-font-size: 22px;"/>
+
+    <Label fx:id="warning"
+           wrapText="true"
+           style="-fx-text-fill: #a64000;"/>
 </VBox>

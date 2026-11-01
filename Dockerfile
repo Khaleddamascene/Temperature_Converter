@@ -18,8 +18,10 @@ RUN apt-get update \
        libxrender1 \
        libgl1 \
        libasound2 \
+       fontconfig \
        fonts-noto-core \
        fonts-noto-cjk \
+    && fc-cache -f \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --create-home --uid 10001 app
 
