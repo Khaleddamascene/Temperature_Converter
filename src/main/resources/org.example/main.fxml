@@ -2,44 +2,36 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
-
-<VBox fx:id="root"
-      spacing="18"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="org.example.MainController"
-      style="-fx-font-size: 15px; -fx-font-family: 'Noto Sans CJK JP';">
-
-    <padding>
-        <Insets top="24" right="24" bottom="24" left="24"/>
-    </padding>
-
-    <Label fx:id="heading"
-           text="%welcome"
-           wrapText="true"
-           style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
-
-    <HBox spacing="12" alignment="CENTER_LEFT">
-        <Label fx:id="languageLabel" text="%language"/>
-        <ComboBox fx:id="languages" prefWidth="200"/>
-    </HBox>
-
-    <ComboBox fx:id="operation" prefWidth="500"/>
-
-    <Label fx:id="temperatureLabel"
-           text="%temperature"
-           labelFor="$temperature"/>
-
-    <TextField fx:id="temperature" onAction="#convert"/>
-
-    <Button fx:id="convertButton"
-            text="%convert"
-            onAction="#convert"/>
-
-    <Label fx:id="conversionResult"
-           wrapText="true"
-           style="-fx-font-size: 22px;"/>
-
-    <Label fx:id="warning"
-           wrapText="true"
-           style="-fx-text-fill: #a64000;"/>
+<VBox fx:id="root" spacing="16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.MainController" style="-fx-font-size: 15px;">
+    <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+    <Label fx:id="heading" text="%welcome" wrapText="true" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+    <HBox spacing="12" alignment="CENTER_LEFT"><Label fx:id="languageLabel" text="%language"/><ComboBox fx:id="languages" prefWidth="200"/></HBox>
+    <TabPane tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+        <tabs>
+            <Tab fx:id="temperatureTab" text="%temperatureTab"><content>
+                <VBox spacing="18"><padding><Insets top="24" right="12" bottom="12" left="12"/></padding>
+                    <ComboBox fx:id="operation" prefWidth="500"/>
+                    <Label fx:id="temperatureLabel" text="%temperature" labelFor="$temperature"/>
+                    <TextField fx:id="temperature" onAction="#convert"/>
+                    <Button fx:id="convertButton" text="%convert" onAction="#convert"/>
+                    <Label fx:id="conversionResult" wrapText="true" style="-fx-font-size: 22px;"/>
+                    <Label fx:id="warning" wrapText="true" style="-fx-text-fill: #a64000;"/>
+                </VBox>
+            </content></Tab>
+            <Tab fx:id="travelTab" text="%travelTab"><content>
+                <VBox spacing="10"><padding><Insets top="16" right="12" bottom="12" left="12"/></padding>
+                    <Label fx:id="tripLabel" text="%trip" labelFor="$trip"/><TextField fx:id="trip"/>
+                    <HBox spacing="12"><VBox spacing="6" HBox.hgrow="ALWAYS"><Label fx:id="distanceLabel" text="%distance" labelFor="$distance"/><TextField fx:id="distance"/></VBox><VBox spacing="6" HBox.hgrow="ALWAYS"><Label fx:id="timeLabel" text="%time" labelFor="$hours"/><TextField fx:id="hours"/></VBox></HBox>
+                    <HBox spacing="12"><Button fx:id="saveButton" text="%save" onAction="#save"/><Button fx:id="refreshButton" text="%refresh" onAction="#refresh"/></HBox>
+                    <Label fx:id="databaseStatus" wrapText="true"/>
+                    <TableView fx:id="history" VBox.vgrow="ALWAYS"><columns>
+                        <TableColumn fx:id="tripColumn" text="%trip" prefWidth="210"/>
+                        <TableColumn fx:id="distanceColumn" text="%distance" prefWidth="170"/>
+                        <TableColumn fx:id="timeColumn" text="%time" prefWidth="130"/>
+                        <TableColumn fx:id="speedColumn" text="%speed" prefWidth="170"/>
+                    </columns></TableView>
+                </VBox>
+            </content></Tab>
+        </tabs>
+    </TabPane>
 </VBox>
