@@ -1,9 +1,37 @@
-FROM eclipse-temurin:21-jre
+FROM maven:3.9.9-eclipse-temurin-21 AS build
+
+WORKDIR /build
+
+COPY pom.xml .
+COPY src ./src
+
+RUN mvn -B clean verify
+
+
+FROM eclipse-temurin:21-jre-jammy
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       libgtk-3-0 \
+       libxtst6 \
+       libxi6 \
+       libxrender1 \
+       libgl1 \
+       libasound2 \
+       fonts-noto-core \
+       fonts-noto-cjk \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --uid 10001 app
 
 WORKDIR /app
 
-COPY target/Temperature_Converter-1.0-SNAPSHOT.jar app.jar
+COPY --from=build /build/target/classes ./classes
+COPY --from=build /build/target/dependency ./lib
 
-USER 10001:10001
+USER app
 
-ENTRYPOINT ["java", "-cp", "/app/app.jar", "org.example.LocalizationApp"]
+ENTRYPOINT ["java", \
+    "-Djava.util.PropertyResourceBundle.encoding=UTF-8", \
+    "-Dprism.order=sw", \
+    "-cp", "/app/classes:/app/lib/*", \
+    "org.example.Launcher"]
