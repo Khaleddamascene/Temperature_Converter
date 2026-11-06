@@ -18,12 +18,17 @@
     </properties>
 
     <dependencies>
-        <!-- JDBC driver for the travel database -->
+        <dependency>
+            <groupId>org.mariadb.jdbc</groupId>
+            <artifactId>mariadb-java-client</artifactId>
+            <version>3.5.6</version>
+        </dependency>
+        <!-- Isolated unit-test database -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>2.2.224</version>
-            <scope>runtime</scope>
+            <scope>test</scope>
         </dependency>
 
         <!-- JavaFX -->
