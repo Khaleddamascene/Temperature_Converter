@@ -37,7 +37,7 @@ public class MainController {
         languages.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue.intValue() >= 0) changeLanguage();
         });
-        operation.setOnAction(event -> clearConversion());
+        operation.setOnAction(event -> { clearConversion(); updateDescriptions(); });
         temperature.textProperty().addListener((observable, oldValue, newValue) -> clearConversion());
         changeLanguage(); refresh();
     }
@@ -56,17 +56,73 @@ public class MainController {
         tripColumn.setText(messages.getString("trip")); distanceColumn.setText(messages.getString("distance")); timeColumn.setText(messages.getString("time")); speedColumn.setText(messages.getString("speed"));
         history.setPlaceholder(new Label(messages.getString("empty")));
         int selected = operation.getSelectionModel().getSelectedIndex();
-        operation.getItems().setAll(messages.getString("fToC"), messages.getString("cToF"));
-        operation.getSelectionModel().select(Math.max(0, selected));
-        clearConversion(); databaseStatus.setText(""); history.refresh();
+        clearConversion();
+        try {
+            units = repository.units(locale.getLanguage());
+            operation.getItems().clear();
+            for (var pair : directions)
+                operation.getItems().add(name(pair[0]) + " → " + name(pair[1]));
+            operation.getSelectionModel().select(Math.max(0, selected));
+            travelUnit(distanceLabel, distanceColumn, "distance", "km");
+            travelUnit(timeLabel, timeColumn, "time", "hour");
+            speedColumn.setText(name("kmh"));
+            speedColumn.setGraphic(info("kmh"));
+            updateDescriptions();
+            loadConversions();
+        } catch (SQLException e) {
+            operation.getItems().clear();
+            conversionResult.setText(messages.getString("databaseError"));
+        }
+        history.refresh();
+    }
+    private final String[][] directions = {{"fahrenheit","celsius"},{"celsius","fahrenheit"},
+        {"celsius","kelvin"},{"kelvin","celsius"},{"fahrenheit","kelvin"},{"kelvin","fahrenheit"}};
+    private java.util.Map<String, TravelRepository.UnitText> units;
+    @FXML private Label descriptions, recentLabel;
+    @FXML private ListView<String> recent;
+    private String name(String key) { return units.get(key).name(); }
+    private Label info(String key) {
+        var icon = new Label("ⓘ");
+        icon.setTooltip(new Tooltip(units.get(key).description()));
+        return icon;
+    }
+    private void travelUnit(Label label, TableColumn<?,?> column, String key, String unit) {
+        String caption = messages.getString(key) + " (" + name(unit) + ")";
+        label.setText(caption);
+        label.setTooltip(new Tooltip(units.get(unit).description()));
+        column.setText(caption);
+    }
+    private void updateDescriptions() {
+        int i = operation.getSelectionModel().getSelectedIndex();
+        descriptions.setText(i < 0 ? "" : units.get(directions[i][0]).description() + " · " + units.get(directions[i][1]).description());
+    }
+    private void loadConversions() throws SQLException {
+        recentLabel.setText(messages.getString("recent"));
+        recent.getItems().setAll(repository.recentConversions().stream().map(c ->
+            format(c.input()) + " " + name(c.source()) + " → " + format(c.result()) + " " + name(c.target())).toList());
     }
     @FXML private void convert() {
         try {
+            int index = operation.getSelectionModel().getSelectedIndex();
+            if (index < 0) return;
+            var pair = directions[index];
             double value = NumberParser.parse(temperature.getText());
-            boolean toCelsius = operation.getSelectionModel().getSelectedIndex() == 0;
-            double result = toCelsius ? converter.fahrenheitToCelsius(value) : converter.celsiusToFahrenheit(value);
-            conversionResult.setText(String.format(locale, messages.getString(toCelsius ? "resultCelsius" : "resultFahrenheit"), result));
-            warning.setText(converter.isExtremeTemperature(toCelsius ? result : value) ? messages.getString("extreme") : "");
+            double celsius = switch (pair[0]) {
+                case "fahrenheit" -> converter.fahrenheitToCelsius(value);
+                case "kelvin" -> converter.kelvinToCelsius(value);
+                default -> value;
+            };
+            double result = switch (pair[1]) {
+                case "fahrenheit" -> converter.celsiusToFahrenheit(celsius);
+                case "kelvin" -> converter.celsiusToKelvin(celsius);
+                default -> celsius;
+            };
+            repository.saveConversion(new TravelRepository.Conversion(value, pair[0], pair[1], result), locale.getLanguage());
+            conversionResult.setText(format(result) + " " + name(pair[1]));
+            warning.setText(converter.isExtremeTemperature(celsius) ? messages.getString("extreme") : "");
+            loadConversions();
+        } catch (SQLException e) {
+            conversionResult.setText(messages.getString("databaseError"));
         } catch (IllegalArgumentException e) {
             conversionResult.setText(messages.getString("invalidNumber")); warning.setText("");
         }
