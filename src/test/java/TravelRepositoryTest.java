@@ -11,10 +11,10 @@ class TravelRepositoryTest {
 
     @Test void opensDatabaseAndPersistsMeasurements() throws Exception {
         String url = "jdbc:h2:file:" + directory.resolve("travel").toAbsolutePath();
-        try (TravelRepository repository = new TravelRepository(url)) {
+        try (TravelRepository repository = DatabaseFixture.open(url)) {
             repository.save("Test trip", 120, 2);
         }
-        try (TravelRepository repository = new TravelRepository(url)) {
+        try (TravelRepository repository = DatabaseFixture.open(url)) {
             var rows = repository.findAll();
             assertEquals(1, rows.size());
             assertEquals("Test trip", rows.getFirst().trip());
