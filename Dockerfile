@@ -30,9 +30,6 @@ WORKDIR /app
 COPY --from=build /build/target/classes ./classes
 COPY --from=build /build/target/dependency ./lib
 
-ENV APP_DATA_DIR=/app/data
-RUN mkdir -p /app/data && chown app:app /app/data
-
 USER app
 
 ENTRYPOINT ["java", \
