@@ -18,19 +18,9 @@ pipeline {
                 git 'https://github.com/Khaleddamascene/Temperature_Converter.git'
             }
         }
-        stage('Build') {
+        stage('Build and Test') {
             steps {
-                bat 'mvn clean install' // sh for linux and ios
-            }
-        }
-        stage('Test') {
-            steps {
-                bat 'mvn test'
-            }
-        }
-        stage('Code Coverage') {
-            steps {
-                bat 'mvn jacoco:report'
+                bat 'mvn -DguiTests=true clean verify'
             }
         }
         stage('Publish Test Results') {
