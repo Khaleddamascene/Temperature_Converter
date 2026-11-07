@@ -7,6 +7,8 @@ public class TemperatureConverter {
     public double celsiusToFahrenheit(double celsius) {
         return finite(finite(celsius) / 5 * 9 + 32);
     }
+    public double celsiusToKelvin(double value) { return finite(value + 273.15); }
+    public double kelvinToCelsius(double value) { return finite(value - 273.15); }
     public boolean isExtremeTemperature(double celsius) {
         finite(celsius);
         return celsius < -40 || celsius > 50;
