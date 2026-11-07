@@ -11,11 +11,13 @@
             <Tab fx:id="temperatureTab" text="%temperatureTab"><content>
                 <VBox spacing="18"><padding><Insets top="24" right="12" bottom="12" left="12"/></padding>
                     <ComboBox fx:id="operation" prefWidth="500"/>
+                    <Label fx:id="descriptions" wrapText="true"/>
                     <Label fx:id="temperatureLabel" text="%temperature" labelFor="$temperature"/>
                     <TextField fx:id="temperature" onAction="#convert"/>
                     <Button fx:id="convertButton" text="%convert" onAction="#convert"/>
                     <Label fx:id="conversionResult" wrapText="true" style="-fx-font-size: 22px;"/>
                     <Label fx:id="warning" wrapText="true" style="-fx-text-fill: #a64000;"/>
+                <Label fx:id="recentLabel"/><ListView fx:id="recent" prefHeight="155" VBox.vgrow="ALWAYS"/>
                 </VBox>
             </content></Tab>
             <Tab fx:id="travelTab" text="%travelTab"><content>
