@@ -97,7 +97,7 @@ class GuiTest {
                 convertButton.fire();
 
                 assertEquals(
-                        "Temperature in Celsius: 0.00 °C",
+                        "0.00 Celsius",
                         conversionResult.getText()
                 );
 
@@ -107,7 +107,7 @@ class GuiTest {
                 convertButton.fire();
 
                 assertEquals(
-                        "Temperature in Fahrenheit: 32.00 °F",
+                        "32.00 Fahrenheit",
                         conversionResult.getText()
                 );
 
@@ -151,7 +151,7 @@ class GuiTest {
                 convertButton.fire();
 
                 assertEquals(
-                        "Temperature in Celsius: 100.00 °C",
+                        "100.00 Celsius",
                         conversionResult.getText()
                 );
 
