@@ -19,7 +19,12 @@ spec:
           image: khaledmarai/temperature_converter:latest
           # Use the locally loaded image, including the latest fixes.
           imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: converter-db
           env:
+            - name: DB_URL
+              value: "jdbc:mariadb://host.minikube.internal:3306/temperature_converter"
             # Replace with a reachable Windows IPv4 address if necessary.
             - name: DISPLAY
               value: "host.minikube.internal:0.0"
