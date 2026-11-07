@@ -30,10 +30,8 @@ class GuiTest {
 
             Stage stage = new Stage();
 
-            try {
-
-                // Test JavaFX application startup.
-                new LocalizationApp().start(stage);
+            try (var repository = DatabaseFixture.open("jdbc:h2:mem:gui;DB_CLOSE_DELAY=-1")) {
+                LocalizationApp.showWindow(stage, repository);
 
                 assertNotNull(stage.getScene());
 
