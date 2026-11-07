@@ -1,6 +1,6 @@
 # Temperature Converter
 
-A JavaFX application for converting temperatures between Celsius and Fahrenheit, with English, Finnish, Swedish, Japanese and Arabic interfaces.
+A JavaFX application for converting temperatures between Celsius, Fahrenheit and Kelvin, with English, Finnish, Swedish, Japanese and Arabic interfaces.
 
 ## Links
 
@@ -10,12 +10,20 @@ A JavaFX application for converting temperatures between Celsius and Fahrenheit,
 
 ## Features
 
-- Fahrenheit to Celsius and Celsius to Fahrenheit conversion.
+- All six conversion directions, with the last five successful results shown newest first.
 - Dynamic language switching using FXML and UTF-8 ResourceBundles.
 - Right-to-left layout for Arabic.
 - Decimal point, decimal comma and Arabic numeric input support.
 - Invalid-number validation and extreme-temperature warnings.
 - JUnit tests, JaCoCo coverage, Jenkins pipeline and Docker configuration.
+
+## Database localization
+
+I chose the translation table approach because the same unit appears in calculations and history across all five languages. The MariaDB `unit` table gives each unit one stable identifier. The `unit_translation` table stores a display name and short description, with a foreign key to the unit and a composite primary key on unit and language. Adding a language takes six translation rows and no database schema changes. The cost is a join when the application loads the unit catalog.
+
+Changing language loads the static interface labels from a ResourceBundle and requests the unit catalog from MariaDB. The query starts with the English entries and joins the selected language by unit identifier. If a translation is missing, that unit keeps its English name and description. The temperature selector shows the unit pair and its descriptions. The travel form uses the distance, duration and speed translations in its labels and tooltips.
+
+Each conversion stores the input, source and target identifiers, result, selected language and creation time. The history displays the latest five rows in the current interface language, so switching languages also translates earlier entries. The separate trips and measurements tables link each travel calculation to a named trip. Importing `src/main/resources/init.sql` creates the schema and seeds the catalog. Re-importing refreshes translations and preserves saved calculations.
 
 ## Run locally
 
@@ -25,6 +33,12 @@ Install JDK 21 and Maven 3.9 or later.
 git clone https://github.com/Khaleddamascene/Temperature_Converter.git
 cd Temperature_Converter
 mvn clean verify
+# In the MariaDB client, signed in with permission to create a database:
+# SOURCE C:/DeskTop/Temperature_Converter/src/main/resources/init.sql;
+# In PowerShell, enter a MariaDB account with read/write access to temperature_converter:
+$credential = Get-Credential -Message 'MariaDB login'
+$env:DB_USER = $credential.UserName
+$env:DB_PASSWORD = $credential.GetNetworkCredential().Password
 mvn javafx:run
 ```
 
@@ -32,11 +46,11 @@ mvn javafx:run
 
 Start Docker Desktop in Linux-container mode. Start XMing or VcXsrv on display 0 with TCP enabled. Authorize the Docker/WSL source address in the X server and permit its connection through the Windows firewall on TCP port 6000.
 
-Pull and run the image:
+Use an image built from this version. Containers must be able to reach the Windows MariaDB server on port 3306, and the MariaDB account must allow connections from the container network. Set the two credential variables as shown above, then run:
 
 ```powershell
 docker pull khaledmarai/temperature_converter:latest
-docker run --rm --name temperature-converter -e DISPLAY=host.docker.internal:0.0 khaledmarai/temperature_converter:latest
+docker run --rm --name temperature-converter -e DB_URL=jdbc:mariadb://host.docker.internal:3306/temperature_converter -e DB_USER -e DB_PASSWORD -e DISPLAY=host.docker.internal:0.0 khaledmarai/temperature_converter:latest
 ```
 
 Run each command on one line in PowerShell. Keep the X server running while using the application.
@@ -107,7 +121,7 @@ The original bundled Jenkinsfile is a separate Linux-agent variant using the `do
 
 ### Unable to open DISPLAY
 
-Use the complete run command with `-e DISPLAY=host.docker.internal:0.0`. Ensure the X server is running and permits connections from Docker/WSL.
+Use the complete run command with `-e DB_URL=jdbc:mariadb://host.docker.internal:3306/temperature_converter -e DB_USER -e DB_PASSWORD -e DISPLAY=host.docker.internal:0.0`. Ensure the X server is running and permits connections from Docker/WSL.
 
 ```powershell
 Test-NetConnection localhost -Port 6000
@@ -135,7 +149,7 @@ Rebuild and restart, then recheck all five languages:
 
 ```powershell
 docker build --no-cache -t khaledmarai/temperature_converter:latest .
-docker run --rm -e DISPLAY=host.docker.internal:0.0 khaledmarai/temperature_converter:latest
+docker run --rm -e DB_URL=jdbc:mariadb://host.docker.internal:3306/temperature_converter -e DB_USER -e DB_PASSWORD -e DISPLAY=host.docker.internal:0.0 khaledmarai/temperature_converter:latest
 ```
 
 ## Kubernetes test
@@ -180,6 +194,7 @@ Run these commands from the project directory:
 ```powershell
 docker build -t khaledmarai/temperature_converter:latest .
 minikube -p temperature-demo image load khaledmarai/temperature_converter:latest
+kubectl --context=temperature-demo create secret generic converter-db --from-literal=DB_USER="$env:DB_USER" --from-literal=DB_PASSWORD="$env:DB_PASSWORD"
 kubectl --context=temperature-demo apply -f k8s/deployment.yaml
 ```
 
