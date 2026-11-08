@@ -1,5 +1,6 @@
 import org.example.NumberParser;
 import org.example.TemperatureConverter;
+import org.example.TravelCalculator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -14,6 +15,16 @@ class CoreTest {
         assertEquals(c, converter.fahrenheitToCelsius(f), 1e-9);
         assertEquals(f, converter.celsiusToFahrenheit(c), 1e-9);
     }
+    @ParameterizedTest @CsvSource({"-273.15,0", "0,273.15", "37,310.15", "100,373.15"})
+    void kelvinConversions(double celsius, double kelvin) {
+        assertEquals(kelvin, converter.celsiusToKelvin(celsius), 1e-9);
+        assertEquals(celsius, converter.kelvinToCelsius(kelvin), 1e-9);
+    }
+    @Test void rejectsInvalidTravelMeasurements() {
+        assertThrows(IllegalArgumentException.class, () -> TravelCalculator.speed(-1, 2));
+        assertThrows(IllegalArgumentException.class, () -> TravelCalculator.speed(10, 0));
+        assertThrows(IllegalArgumentException.class, () -> TravelCalculator.speed(Double.MAX_VALUE, 0.5));
+    }
     @Test void extremeBoundaries() {
         assertTrue(converter.isExtremeTemperature(-40.01));
         assertFalse(converter.isExtremeTemperature(-40));
@@ -24,6 +35,8 @@ class CoreTest {
         for (double value : new double[]{Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY}) {
             assertThrows(IllegalArgumentException.class, () -> converter.fahrenheitToCelsius(value));
             assertThrows(IllegalArgumentException.class, () -> converter.celsiusToFahrenheit(value));
+            assertThrows(IllegalArgumentException.class, () -> converter.celsiusToKelvin(value));
+            assertThrows(IllegalArgumentException.class, () -> converter.kelvinToCelsius(value));
             assertThrows(IllegalArgumentException.class, () -> converter.isExtremeTemperature(value));
         }
         assertThrows(IllegalArgumentException.class, () -> converter.celsiusToFahrenheit(Double.MAX_VALUE));
