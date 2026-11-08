@@ -70,6 +70,11 @@
                     <systemPropertyVariables>
                         <java.util.PropertyResourceBundle.encoding>UTF-8</java.util.PropertyResourceBundle.encoding>
                     </systemPropertyVariables>
+                    <environmentVariables>
+                        <DB_URL>jdbc:h2:mem:gui;MODE=MariaDB</DB_URL>
+                        <DB_USER>sa</DB_USER>
+                        <DB_PASSWORD></DB_PASSWORD>
+                    </environmentVariables>
                 </configuration>
             </plugin>
 
@@ -139,6 +144,9 @@
                                     <includes>
                                         <include>org.example.TemperatureConverter</include>
                                         <include>org.example.NumberParser</include>
+                                        <include>org.example.TravelCalculator</include>
+                                        <include>org.example.TravelRepository</include>
+                                        <include>org.example.database.DBConnection</include>
                                     </includes>
                                     <limits>
                                         <limit>
