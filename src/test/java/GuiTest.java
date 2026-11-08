@@ -6,6 +6,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 
 import org.example.LocalizationApp;
@@ -29,9 +31,12 @@ class GuiTest {
         FutureTask<Void> task = new FutureTask<>(() -> {
 
             Stage stage = new Stage();
+            var app = new LocalizationApp();
 
             try (var repository = DatabaseFixture.open("jdbc:h2:mem:gui;DB_CLOSE_DELAY=-1")) {
-                LocalizationApp.showWindow(stage, repository);
+                assertEquals("jdbc:h2:mem:gui;MODE=MariaDB", System.getenv("DB_URL"),
+                        "Run the GUI test with Maven's isolated database settings");
+                app.start(stage);
 
                 assertNotNull(stage.getScene());
 
@@ -152,6 +157,66 @@ class GuiTest {
                         "100.00 Celsius",
                         conversionResult.getText()
                 );
+
+                operation.getSelectionModel().select("Celsius → Kelvin");
+                temperature.setText("0");
+                convertButton.fire();
+                assertEquals("273.15 Kelvin", conversionResult.getText());
+
+                operation.getSelectionModel().select("Kelvin → Celsius");
+                temperature.setText("273.15");
+                convertButton.fire();
+                assertEquals("0.00 Celsius", conversionResult.getText());
+
+                var tabs = (TabPane) root.lookup(".tab-pane");
+                tabs.getSelectionModel().select(1);
+                root.applyCss();
+                root.layout();
+                var trip = (TextField) root.lookup("#trip");
+                var distance = (TextField) root.lookup("#distance");
+                var hours = (TextField) root.lookup("#hours");
+                var save = (Button) root.lookup("#saveButton");
+                var refresh = (Button) root.lookup("#refreshButton");
+                var status = (Label) root.lookup("#databaseStatus");
+                var history = (TableView<?>) root.lookup("#history");
+
+                trip.setText("Helsinki");
+                distance.setText("120");
+                hours.setText("0");
+                save.fire();
+                assertEquals("Enter a trip name, a nonnegative distance and a positive duration.", status.getText());
+                assertTrue(history.getItems().isEmpty());
+
+                hours.setText("2");
+                save.fire();
+                assertEquals("Measurement saved.", status.getText());
+                assertEquals(repository.findAll(), history.getItems());
+                repository.save("Tampere", 90, 1.5);
+                refresh.fire();
+                assertEquals("", status.getText());
+                assertEquals(2, history.getItems().size());
+                assertEquals(repository.findAll(), history.getItems());
+
+                assertFalse(operation.getItems().isEmpty());
+                app.stop();
+                save.fire();
+                assertEquals("Database operation failed.", status.getText());
+                hours.setText("invalid");
+                save.fire();
+                assertNotEquals("Database operation failed.", status.getText());
+                refresh.fire();
+                assertEquals("Database operation failed.", status.getText());
+
+                tabs.getSelectionModel().select(0);
+                temperature.setText("300");
+                convertButton.fire();
+                assertEquals("Database operation failed.", conversionResult.getText());
+
+                languages.getSelectionModel().select("Suomi");
+                assertTrue(operation.getItems().isEmpty());
+                var finnish = java.util.ResourceBundle.getBundle(
+                        "MessagesBundle", java.util.Locale.forLanguageTag("fi-FI"));
+                assertEquals(finnish.getString("databaseError"), conversionResult.getText());
 
             } finally {
                 stage.close();
