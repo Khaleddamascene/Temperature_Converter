@@ -28,8 +28,9 @@ pipeline {
                 junit '**/target/surefire-reports/*.xml'
             }
         }
-        stage('Publish Coverage Report') {
+        stage('JaCoCo Coverage Report') {
             steps {
+                bat 'mvn jacoco:report'
                 jacoco()
             }
         }
