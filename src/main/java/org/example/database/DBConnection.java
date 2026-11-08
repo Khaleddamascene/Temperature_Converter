@@ -6,17 +6,21 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.Properties;
 
 public final class DBConnection {
     private DBConnection() {}
 
     public static Connection open() throws SQLException {
-        String url = System.getenv().getOrDefault("DB_URL", "jdbc:mariadb://localhost:3306/temperature_converter");
-        String user = System.getenv("DB_USER");
-        String password = System.getenv("DB_PASSWORD");
+        return open(System.getenv(), Path.of("database.local.properties"));
+    }
+
+    static Connection open(Map<String, String> environment, Path file) throws SQLException {
+        String url = environment.getOrDefault("DB_URL", "jdbc:mariadb://localhost:3306/temperature_converter");
+        String user = environment.get("DB_USER");
+        String password = environment.get("DB_PASSWORD");
         if (user == null && password == null) {
-            Path file = Path.of("database.local.properties");
             if (Files.exists(file)) {
                 Properties settings = new Properties();
                 try (var reader = Files.newBufferedReader(file)) {
