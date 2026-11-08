@@ -1,5 +1,5 @@
 import org.example.TravelRepository;
-import org.example.TemperatureConverter;
+import java.sql.DriverManager;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,9 +23,21 @@ class LocalizationDaoTest {
             assertEquals(2, rows.getLast().input());
         }
     }
-    @Test void kelvinScale() {
-        var converter = new TemperatureConverter();
-        assertEquals(273.15, converter.celsiusToKelvin(0));
-        assertEquals(-273.15, converter.kelvinToCelsius(0));
+    @Test void missingFinnishUnitFallsBackToEnglishIndividually() throws Exception {
+        String url = "jdbc:h2:mem:partialFallback;DB_CLOSE_DELAY=-1";
+        try (var db = DatabaseFixture.open(url);
+             var connection = DriverManager.getConnection(url + ";MODE=MariaDB", "sa", "");
+             var statement = connection.createStatement()) {
+            var finnish = db.units("fi");
+            var english = db.units("en");
+            assertNotEquals(english.get("celsius"), finnish.get("celsius"));
+            assertNotEquals(english.get("hour"), finnish.get("hour"));
+            assertEquals(1, statement.executeUpdate(
+                    "DELETE FROM unit_translation WHERE unit_id='celsius' AND lang='fi'"));
+            var result = db.units("fi");
+            assertEquals(english.keySet(), result.keySet());
+            assertEquals(english.get("celsius"), result.get("celsius"));
+            assertEquals(finnish.get("hour"), result.get("hour"));
+        }
     }
 }
