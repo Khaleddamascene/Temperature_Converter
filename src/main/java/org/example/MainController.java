@@ -38,13 +38,33 @@ public class MainController {
             if (newValue.intValue() >= 0) changeLanguage();
         });
         operation.setOnAction(event -> { clearConversion(); updateDescriptions(); });
+        temperature.setTextFormatter(new TextFormatter<String>(change -> {
+            change.setText(localizeInput(change.getText()));
+            return change;
+        }));
         temperature.textProperty().addListener((observable, oldValue, newValue) -> clearConversion());
         changeLanguage(); refresh();
     }
     private String format(double number) { return String.format(locale, "%.2f", number); }
+    private String localizeInput(String text) {
+        boolean arabic = locale.getLanguage().equals("ar");
+        StringBuilder result = new StringBuilder();
+        for (char character : text.toCharArray()) {
+            int digit = Character.digit(character, 10);
+            if (digit >= 0) {
+                result.append((char) ((arabic ? '٠' : '0') + digit));
+            } else if (character == '.' || character == '٫') {
+                result.append(arabic ? '٫' : '.');
+            } else {
+                result.append(character);
+            }
+        }
+        return result.toString();
+    }
     private void clearConversion() { conversionResult.setText(""); warning.setText(""); }
     private void changeLanguage() {
         locale = locales[languages.getSelectionModel().getSelectedIndex()];
+        temperature.setText(localizeInput(temperature.getText()));
         messages = ResourceBundle.getBundle("MessagesBundle", locale);
         root.setNodeOrientation(locale.getLanguage().equals("ar") ? NodeOrientation.RIGHT_TO_LEFT : NodeOrientation.LEFT_TO_RIGHT);
         stage.setTitle(messages.getString("title"));

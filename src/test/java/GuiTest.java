@@ -91,8 +91,18 @@ class GuiTest {
                     );
                 }
 
+                temperature.setText("19.5");
+                assertEquals("١٩٫٥", temperature.getText());
+                operation.getSelectionModel().select(1);
+                convertButton.fire();
+                assertTrue(conversionResult.getText().contains("٦٧"));
+                temperature.setText("١٢");
+                assertEquals("١٢", temperature.getText());
+
                 // Return to English.
                 languages.getSelectionModel().select(0);
+                assertEquals("12", temperature.getText());
+                operation.getSelectionModel().select(0);
 
                 // Test Fahrenheit to Celsius.
                 operation.getSelectionModel().select(0);
