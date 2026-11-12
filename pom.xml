@@ -118,6 +118,17 @@
                             <includeScope>runtime</includeScope>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>copy-test-dependencies-for-analysis</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeScope>test</includeScope>
+                            <outputDirectory>${project.build.directory}/test-dependency</outputDirectory>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 

@@ -383,8 +383,10 @@ sonar-scanner
 
 Open [the project dashboard](http://localhost:9000/dashboard?id=avgspd) after analysis. Confirm the
 background task completed and inspect the quality gate. Successful upload alone
-does not prove that the gate passed. The standalone configuration uses the runtime
-jars copied by Maven; Maven analysis has fuller test dependency information.
+does not prove that the gate passed. Maven copies runtime jars to `target/dependency`
+and the full test classpath, including JUnit and H2, to `target/test-dependency`.
+The standalone scanner reads both directories. Run `mvn clean verify` before
+`sonar-scanner` so the compiled classes, dependencies, and reports are available.
 
 ### Java version correction
 
