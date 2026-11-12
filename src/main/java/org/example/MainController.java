@@ -3,8 +3,10 @@ package org.example;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.fxml.FXML;
 import javafx.geometry.NodeOrientation;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import java.sql.SQLException;
 import java.util.Locale;
@@ -12,6 +14,8 @@ import java.util.ResourceBundle;
 
 public class MainController {
     @FXML private VBox root;
+    @FXML private HBox headingRow;
+    @FXML private Label headingPunctuation;
     @FXML private Label heading, languageLabel, temperatureLabel, conversionResult, warning, tripLabel, distanceLabel, timeLabel, databaseStatus;
     @FXML private Tab temperatureTab, travelTab;
     @FXML private ComboBox<String> languages, operation;
@@ -45,7 +49,10 @@ public class MainController {
         temperature.textProperty().addListener((observable, oldValue, newValue) -> clearConversion());
         changeLanguage(); refresh();
     }
-    private String format(double number) { return String.format(locale, "%.2f", number); }
+    private String format(double number) {
+        // Keep Arabic output consistent when JDK locale defaults use Latin digits.
+        return localizeInput(String.format(locale, "%.2f", number));
+    }
     private String localizeInput(String text) {
         boolean arabic = locale.getLanguage().equals("ar");
         StringBuilder result = new StringBuilder();
@@ -68,7 +75,15 @@ public class MainController {
         messages = ResourceBundle.getBundle("MessagesBundle", locale);
         root.setNodeOrientation(locale.getLanguage().equals("ar") ? NodeOrientation.RIGHT_TO_LEFT : NodeOrientation.LEFT_TO_RIGHT);
         stage.setTitle(messages.getString("title"));
-        heading.setText(messages.getString("welcome")); languageLabel.setText(messages.getString("language"));
+        String welcome = messages.getString("welcome");
+        boolean arabicHeading = locale.getLanguage().equals("ar") && welcome.endsWith("!");
+        heading.setText(arabicHeading ? welcome.substring(0, welcome.length() - 1) : welcome);
+        heading.setNodeOrientation(root.getNodeOrientation());
+        headingRow.setAlignment(arabicHeading ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+        headingPunctuation.setText(arabicHeading ? "!" : "");
+        headingPunctuation.setVisible(arabicHeading);
+        headingPunctuation.setManaged(arabicHeading);
+        languageLabel.setText(messages.getString("language"));
         temperatureTab.setText(messages.getString("temperatureTab")); travelTab.setText(messages.getString("travelTab"));
         temperatureLabel.setText(messages.getString("temperature")); convertButton.setText(messages.getString("convert"));
         tripLabel.setText(messages.getString("trip")); distanceLabel.setText(messages.getString("distance")); timeLabel.setText(messages.getString("time"));
