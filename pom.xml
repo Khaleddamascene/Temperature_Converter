@@ -9,13 +9,19 @@
     <artifactId>Temperature_Converter</artifactId>
     <version>1.0.0</version>
 
+
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>21.0.2</javafx.version>
         <junit.version>5.12.2</junit.version>
         <jacoco.version>0.8.14</jacoco.version>
+        <sonar.projectKey>avgspd</sonar.projectKey>
+        <sonar.projectName>Temperature Converter</sonar.projectName>
+        <sonar.host.url>http://localhost:9000</sonar.host.url>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     </properties>
+
 
     <dependencies>
         <dependency>
@@ -54,6 +60,11 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>5.8.0.7211</version>
+            </plugin>
             <!-- Java compiler -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
