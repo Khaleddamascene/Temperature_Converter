@@ -117,6 +117,8 @@ Rebuild after changing source code, FXML, translations or the Dockerfile, then s
 
 ## Tests and coverage
 
+See [SonarQube summary and project application](#week-4-sonarqube-summary-and-project-application) for the handout summary, exercise explanation, analysis commands, and verification status.
+
 ```powershell
 mvn clean verify
 ```
@@ -126,10 +128,10 @@ Open `target/site/jacoco/index.html` to inspect coverage.
 To include the optional GUI tests on a machine with a working graphical display:
 
 ```powershell
-mvn -DguiTests=true clean verify
+mvn "-DguiTests=true" clean verify
 ```
 
-The full GUI-enabled run last verified in this project passed 35 tests. Generate a fresh report after changes before capturing submission evidence.
+On 12 November 2026, the GUI-enabled verification passed all 35 tests on both Java 21 and Java 25, with no failures or skipped tests. All configured JaCoCo coverage checks passed. Generate a fresh report after changes before capturing submission evidence.
 
 The assignment target is at least 80% line coverage of core logic. The Maven configuration enforces 90% per class for TemperatureConverter, NumberParser, TravelCalculator, TravelRepository and DBConnection. The DAO tests cover an unsupported language and a single missing Finnish translation, checking that English fallback preserves other Finnish translations.
 
@@ -296,3 +298,111 @@ minikube stop -p temperature-homework
 | Screenshots | `ScreenShots/` |
 
 Use screenshots from the submitted version. Existing screenshots may predate the MariaDB migration or later interface changes. The temperature-homework deployment was verified on 9 November 2026 with one ready application pod and zero restarts; capture current output for submission.
+
+##  SonarQube summary and project application
+
+### Summary of the handout
+
+This four-page handout is an installation and analysis exercise, rather than a
+list of required application features or a general clean-code refactoring task.
+
+1. Install and start SonarQube; check its local login page.
+2. Install SonarScanner; check `sonar-scanner -v`.
+3. Configure the project and store an analysis token as the user environment
+   variable `SONAR_TOKEN`.
+4. Analyze using either the standalone scanner or Maven, then inspect the dashboard.
+5. Try the addition example and compare IntelliJ findings with the server gate.
+
+The handout says no installation report is required in Oma: mark the task Done
+after installation. It also says in-class work supports Sprint 6 and late Sprint
+submissions are not accepted. These are course instructions; this project update
+does not submit work or mark any course task complete.
+
+### Exercise explained
+
+The sample's `addMe(12, 4)` returns 16. Its logger writes that result at INFO level.
+The `isLoggable` guard avoids formatting the message when INFO logging is disabled.
+Useful sample tests cover a normal sum, zero, and negative operands. Generate
+coverage before sending the sample to SonarQube.
+
+An IDE showing no issues and a passing server quality gate are different checks.
+The server can assess coverage, duplication, and new-code conditions as well as
+issues. If the gate fails, inspect the failed conditions and confirm coverage was
+imported. The handout reports inconsistent results without establishing a cause;
+adding tests does not guarantee that every gate will pass.
+
+Use a separate practice project for the literal addition exercise. An unrelated
+addition program does not belong in Temperature Converter.
+
+### Applied changes
+
+- Replaced PowerShell fragments in `sonar-project.properties` with valid property
+  entries, separate source/test roots, compiled-class paths, and report paths.
+- Retained the existing project key `avgspd` in both scanner configurations and
+  set the display name to Temperature Converter. Change both keys if you choose
+  a different server project.
+- Added Maven analysis properties and pinned its scanner plugin version.
+- Connected analysis to the existing JaCoCo XML report and preserved the 90%
+  per-class core coverage requirement.
+- Ignored scanner output and kept authentication in the environment.
+- Preserved Java 21 and existing application changes.
+
+Maven is the preferred route because it supplies dependency and test information.
+Maven uses `pom.xml`; the standalone scanner uses `sonar-project.properties`.
+
+### Analysis commands
+
+Start the installed SonarQube server following its version-specific instructions.
+Wait for [the local SonarQube server](http://localhost:9000) to become available and keep its process running.
+The token needs permission to analyze project `avgspd`.
+
+Check token presence without displaying its value:
+
+```powershell
+[bool]$env:SONAR_TOKEN
+```
+
+Run from the project root:
+
+```powershell
+mvn clean verify sonar:sonar
+```
+
+To include the optional GUI test, use a working graphical display:
+
+```powershell
+mvn "-DguiTests=true" clean verify sonar:sonar
+```
+
+Alternatively, practice the standalone route:
+
+```powershell
+mvn clean verify
+sonar-scanner
+```
+
+Open [the project dashboard](http://localhost:9000/dashboard?id=avgspd) after analysis. Confirm the
+background task completed and inspect the quality gate. Successful upload alone
+does not prove that the gate passed. The standalone configuration uses the runtime
+jars copied by Maven; Maven analysis has fuller test dependency information.
+
+### Java version correction
+
+The handout's JDK 17 advice depends on the SonarQube version. This app targets
+Java 21; switching its build to JDK 17 would break compilation. Match the server's
+runtime to its installed release and retain Java 21 for this Maven project.
+Current scanner documentation also describes automatic runtime provisioning.
+
+Official reference, checked 12 November 2026:
+[SonarScanner for Maven](https://docs.sonarsource.com/sonarqube-server/analyzing-source-code/scanners/sonarscanner-for-maven).
+
+### Verification on 12 November 2026
+
+- Java 21 and SonarScanner CLI 8.3.1 are available.
+- `SONAR_TOKEN` is present; its value was not displayed and validity was not tested.
+- After the Arabic output fix, `mvn -B "-DguiTests=true" verify` passed all 35 tests
+  on Java 21 and Java 25. All configured JaCoCo coverage checks passed.
+- The local SonarQube status endpoint was unreachable. Server analysis, token
+  validity, IDE findings, and the quality gate remain unverified.
+
+Successful local tests are not evidence of a passing server quality gate.
