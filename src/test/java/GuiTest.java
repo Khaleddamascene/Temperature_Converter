@@ -91,16 +91,28 @@ class GuiTest {
                     );
                 }
 
+                root.applyCss();
+                root.layout();
+                var heading = (Label) root.lookup("#heading");
+                var punctuation = (Label) root.lookup("#headingPunctuation");
+                assertEquals("مرحبًا بك في محول درجات الحرارة", heading.getText());
+                assertEquals("!", punctuation.getText());
+                assertTrue(punctuation.isVisible());
+                assertTrue(punctuation.localToScene(punctuation.getBoundsInLocal()).getMaxX()
+                        <= heading.localToScene(heading.getBoundsInLocal()).getMinX() + 1);
+
                 temperature.setText("19.5");
                 assertEquals("١٩٫٥", temperature.getText());
                 operation.getSelectionModel().select(1);
                 convertButton.fire();
-                assertTrue(conversionResult.getText().contains("٦٧"));
+                assertEquals("٦٧٫١٠ درجة فهرنهايت", conversionResult.getText(),
+                        "Arabic conversion results must use Arabic digits and decimal separator");
                 temperature.setText("١٢");
                 assertEquals("١٢", temperature.getText());
 
                 // Return to English.
                 languages.getSelectionModel().select(0);
+                assertFalse(punctuation.isManaged());
                 assertEquals("12", temperature.getText());
                 operation.getSelectionModel().select(0);
 
