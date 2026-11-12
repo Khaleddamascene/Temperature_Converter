@@ -4,7 +4,10 @@
 <?import javafx.geometry.Insets?>
 <VBox fx:id="root" spacing="16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.MainController" style="-fx-font-size: 15px; -fx-font-family: 'Noto Sans CJK JP';">
     <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
-    <Label fx:id="heading" text="%welcome" wrapText="true" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+    <HBox fx:id="headingRow" nodeOrientation="LEFT_TO_RIGHT" alignment="CENTER_LEFT" style="-fx-font-size: 24px; -fx-font-weight: bold;">
+        <Label fx:id="headingPunctuation" visible="false" managed="false"/>
+        <Label fx:id="heading" text="%welcome" wrapText="true"/>
+    </HBox>
     <HBox spacing="12" alignment="CENTER_LEFT"><Label fx:id="languageLabel" text="%language"/><ComboBox fx:id="languages" prefWidth="200"/></HBox>
     <TabPane tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
         <tabs>
